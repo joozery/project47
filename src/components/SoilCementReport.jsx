@@ -274,31 +274,37 @@ const SoilCementReport = () => {
         const groutVolume = parseFloat(formData.groutVolume) || 1004.0;
         const diameter = parseFloat(formData.diameter) || 0.6;
         
+        // ใช้เวลาปัจจุบันสำหรับการคำนวณกราฟ
+        const currentTime = Date.now();
+        const drillingElapsed = drillingStartTime ? (currentTime - drillingStartTime) / 1000 : 0;
+        const groutingElapsed = groutingStartTime ? (currentTime - groutingStartTime) / 1000 : 0;
+        const graphElapsed = Math.max(drillingElapsed, groutingElapsed);
+        
         setGraphData(prev => ({
           ...prev,
           pressure: prev.pressure.map((point, i) => ({
             ...point,
-            y: 100 + (cementRatio / 10) + Math.sin(elapsed + i) * 10 + Math.random() * 20
+            y: 100 + (cementRatio / 10) + Math.sin(graphElapsed + i) * 10 + Math.random() * 20
           })),
           rotation: prev.rotation.map((point, i) => ({
             ...point,
-            y: 50 + (depth / 20) + Math.cos(elapsed + i) * 5 + Math.random() * 10
+            y: 50 + (depth / 20) + Math.cos(graphElapsed + i) * 5 + Math.random() * 10
           })),
           speed: prev.speed.map((point, i) => ({
             ...point,
-            y: Math.min(10, (depth / 10) + Math.sin(elapsed + i) * 0.3 + Math.random() * 0.2)
+            y: Math.min(10, (depth / 10) + Math.sin(graphElapsed + i) * 0.3 + Math.random() * 0.2)
           })),
           flow: prev.flow.map((point, i) => ({
             ...point,
-            y: 100 + (groutVolume / 20) + Math.sin(elapsed + i) * 15 + Math.random() * 10
+            y: 100 + (groutVolume / 20) + Math.sin(graphElapsed + i) * 15 + Math.random() * 10
           })),
           waterVolume: prev.waterVolume.map((point, i) => ({
             ...point,
-            y: Math.min(2000, (depth * 80) + Math.sin(elapsed + i) * 40 + Math.random() * 30)
+            y: Math.min(2000, (depth * 80) + Math.sin(graphElapsed + i) * 40 + Math.random() * 30)
           })),
           cementVolume: prev.cementVolume.map((point, i) => ({
             ...point,
-            y: Math.min(2000, (depth * 80) + Math.cos(elapsed + i) * 40 + Math.random() * 30)
+            y: Math.min(2000, (depth * 80) + Math.cos(graphElapsed + i) * 40 + Math.random() * 30)
           }))
         }));
       }, 1000);
