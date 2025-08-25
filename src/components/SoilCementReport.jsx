@@ -146,85 +146,133 @@ const SoilCementReport = () => {
 
   // Timer functions for drilling
   const startDrillingTimer = () => {
+    // เริ่ม timer ด้วยเวลาปัจจุบันเสมอ
     const now = new Date();
-    const timeString = now.toTimeString().split(' ')[0];
-    setFormData(prev => ({ ...prev, startDrilling: timeString }));
-    setDrillingStartTime(now);
-    setDrillingTimer('00:00:00'); // รีเซ็ต timer เป็น 00:00:00
+    
+    // ถ้ามี custom time ที่ set ไว้แล้ว ให้ใช้เวลานั้น
+    if (formData.startDrilling && !drillingStartTime) {
+      // ใช้เวลาที่ set ไว้แล้ว แต่ไม่เปลี่ยน drillingStartTime
+      setDrillingStartTime(now); // ใช้เวลาปัจจุบันเป็นจุดเริ่มต้น timer
+      setDrillingTimer('00:00:00'); // เริ่มต้นที่ 00:00:00
+    } else {
+      // ใช้เวลาปัจจุบัน
+      const timeString = now.toTimeString().split(' ')[0];
+      setFormData(prev => ({ ...prev, startDrilling: timeString }));
+      setDrillingStartTime(now);
+      setDrillingTimer('00:00:00'); // รีเซ็ต timer เป็น 00:00:00
+    }
     setShowDrillingTimeInput(false); // ซ่อน input
   };
 
-  const startDrillingTimerWithCustomTime = () => {
+  const setDrillingCustomTime = () => {
     if (customDrillingTime) {
-      // แปลงเวลาที่คีย์เป็น Date object
-      const [hours, minutes, seconds] = customDrillingTime.split(':').map(Number);
-      const now = new Date();
-      const customTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
-      
       setFormData(prev => ({ ...prev, startDrilling: customDrillingTime }));
-      setDrillingStartTime(customTime);
-      setDrillingTimer('00:00:00');
       setShowDrillingTimeInput(false);
       setCustomDrillingTime('');
     }
   };
 
+  const startDrillingTimerWithCustomTime = () => {
+    if (formData.startDrilling) {
+      // แปลงเวลาที่ set ไว้เป็น Date object
+      const [hours, minutes, seconds] = formData.startDrilling.split(':').map(Number);
+      const now = new Date();
+      const customTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
+      
+      setDrillingStartTime(customTime);
+      setDrillingTimer('00:00:00'); // เริ่มต้นที่ 00:00:00
+    }
+  };
+
   const stopDrillingTimer = () => {
-    const now = new Date();
-    const endTimeString = now.toTimeString().split(' ')[0];
-    setFormData(prev => ({ ...prev, endDrilling: endTimeString }));
-    
     if (drillingStartTime) {
-      const elapsed = new Date() - drillingStartTime;
-      const hours = Math.floor(elapsed / 3600000);
-      const minutes = Math.floor((elapsed % 3600000) / 60000);
-      const seconds = Math.floor((elapsed % 60000) / 1000);
-      const elapsedTimeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      setFormData(prev => ({ ...prev, timeDrilling: elapsedTimeString }));
+      // ใช้เวลาที่ timer เดินอยู่ (เวลาปัจจุบันที่แสดงใน timer)
+      const currentTimerValue = drillingTimer; // เช่น "01:58:48"
+      const [timerHours, timerMinutes, timerSeconds] = currentTimerValue.split(':').map(Number);
+      
+      // แปลง Start time ที่ set ไว้เป็น milliseconds
+      const [startHours, startMinutes, startSeconds] = formData.startDrilling.split(':').map(Number);
+      const startTime = new Date();
+      startTime.setHours(startHours, startMinutes, startSeconds, 0);
+      
+      // คำนวณ End time = Start time ที่ set ไว้ + Timer duration
+      const timerDurationMs = (timerHours * 3600 + timerMinutes * 60 + timerSeconds) * 1000;
+      const endTime = new Date(startTime.getTime() + timerDurationMs);
+      const endTimeString = endTime.toTimeString().split(' ')[0];
+      
+      setFormData(prev => ({ 
+        ...prev, 
+        timeDrilling: currentTimerValue,
+        endDrilling: endTimeString 
+      }));
       setDrillingStartTime(null);
-      setDrillingTimer(elapsedTimeString); // เก็บค่า timer สุดท้าย
+      setDrillingTimer(currentTimerValue); // เก็บค่า timer สุดท้าย
     }
   };
 
   // Timer functions for grouting
   const startGroutingTimer = () => {
+    // เริ่ม timer ด้วยเวลาปัจจุบันเสมอ
     const now = new Date();
-    const timeString = now.toTimeString().split(' ')[0];
-    setFormData(prev => ({ ...prev, startGrouting: timeString }));
-    setGroutingStartTime(now);
-    setGroutingTimer('00:00:00'); // รีเซ็ต timer เป็น 00:00:00
+    
+    // ถ้ามี custom time ที่ set ไว้แล้ว ให้ใช้เวลานั้น
+    if (formData.startGrouting && !groutingStartTime) {
+      // ใช้เวลาที่ set ไว้แล้ว แต่ไม่เปลี่ยน groutingStartTime
+      setGroutingStartTime(now); // ใช้เวลาปัจจุบันเป็นจุดเริ่มต้น timer
+      setGroutingTimer('00:00:00'); // เริ่มต้นที่ 00:00:00
+    } else {
+      // ใช้เวลาปัจจุบัน
+      const timeString = now.toTimeString().split(' ')[0];
+      setFormData(prev => ({ ...prev, startGrouting: timeString }));
+      setGroutingStartTime(now);
+      setGroutingTimer('00:00:00'); // รีเซ็ต timer เป็น 00:00:00
+    }
     setShowGroutingTimeInput(false); // ซ่อน input
   };
 
-  const startGroutingTimerWithCustomTime = () => {
+  const setGroutingCustomTime = () => {
     if (customGroutingTime) {
-      // แปลงเวลาที่คีย์เป็น Date object
-      const [hours, minutes, seconds] = customGroutingTime.split(':').map(Number);
-      const now = new Date();
-      const customTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
-      
       setFormData(prev => ({ ...prev, startGrouting: customGroutingTime }));
-      setGroutingStartTime(customTime);
-      setGroutingTimer('00:00:00');
       setShowGroutingTimeInput(false);
       setCustomGroutingTime('');
     }
   };
 
+  const startGroutingTimerWithCustomTime = () => {
+    if (formData.startGrouting) {
+      // แปลงเวลาที่ set ไว้เป็น Date object
+      const [hours, minutes, seconds] = formData.startGrouting.split(':').map(Number);
+      const now = new Date();
+      const customTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
+      
+      setGroutingStartTime(customTime);
+      setGroutingTimer('00:00:00'); // เริ่มต้นที่ 00:00:00
+    }
+  };
+
   const stopGroutingTimer = () => {
-    const now = new Date();
-    const endTimeString = now.toTimeString().split(' ')[0];
-    setFormData(prev => ({ ...prev, endGrouting: endTimeString }));
-    
     if (groutingStartTime) {
-      const elapsed = new Date() - groutingStartTime;
-      const hours = Math.floor(elapsed / 3600000);
-      const minutes = Math.floor((elapsed % 3600000) / 60000);
-      const seconds = Math.floor((elapsed % 60000) / 1000);
-      const elapsedTimeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      setFormData(prev => ({ ...prev, timeGrouting: elapsedTimeString }));
+      // ใช้เวลาที่ timer เดินอยู่ (เวลาปัจจุบันที่แสดงใน timer)
+      const currentTimerValue = groutingTimer; // เช่น "00:25:00"
+      const [timerHours, timerMinutes, timerSeconds] = currentTimerValue.split(':').map(Number);
+      
+      // แปลง Start time ที่ set ไว้เป็น milliseconds
+      const [startHours, startMinutes, startSeconds] = formData.startGrouting.split(':').map(Number);
+      const startTime = new Date();
+      startTime.setHours(startHours, startMinutes, startSeconds, 0);
+      
+      // คำนวณ End time = Start time ที่ set ไว้ + Timer duration
+      const timerDurationMs = (timerHours * 3600 + timerMinutes * 60 + timerSeconds) * 1000;
+      const endTime = new Date(startTime.getTime() + timerDurationMs);
+      const endTimeString = endTime.toTimeString().split(' ')[0];
+      
+      setFormData(prev => ({ 
+        ...prev, 
+        timeGrouting: currentTimerValue,
+        endGrouting: endTimeString 
+      }));
       setGroutingStartTime(null);
-      setGroutingTimer(elapsedTimeString); // เก็บค่า timer สุดท้าย
+      setGroutingTimer(currentTimerValue); // เก็บค่า timer สุดท้าย
     }
   };
 
@@ -245,27 +293,27 @@ const SoilCementReport = () => {
         // อัพเดท Drilling Timer
         if (drillingStartTime) {
           const elapsed = (now - drillingStartTime) / 1000;
-          if (elapsed >= 0) { // ตรวจสอบว่าเวลาย้อนหลังหรือไม่
-            const hours = Math.floor(elapsed / 3600);
-            const minutes = Math.floor((elapsed % 3600) / 60);
-            const seconds = Math.floor(elapsed % 60);
-            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            setDrillingTimer(timeString); // อัพเดท timer state
-            setFormData(prev => ({ ...prev, timeDrilling: timeString }));
-          }
+          // ใช้ค่าสัมบูรณ์เพื่อป้องกันค่าติดลบ
+          const absoluteElapsed = Math.abs(elapsed);
+          const hours = Math.floor(absoluteElapsed / 3600);
+          const minutes = Math.floor((absoluteElapsed % 3600) / 60);
+          const seconds = Math.floor(absoluteElapsed % 60);
+          const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          setDrillingTimer(timeString); // อัพเดท timer state
+          setFormData(prev => ({ ...prev, timeDrilling: timeString }));
         }
         
         // อัพเดท Grouting Timer
         if (groutingStartTime) {
           const elapsed = (now - groutingStartTime) / 1000;
-          if (elapsed >= 0) { // ตรวจสอบว่าเวลาย้อนหลังหรือไม่
-            const hours = Math.floor(elapsed / 3600);
-            const minutes = Math.floor((elapsed % 3600) / 60);
-            const seconds = Math.floor(elapsed % 60);
-            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            setGroutingTimer(timeString); // อัพเดท timer state
-            setFormData(prev => ({ ...prev, timeGrouting: timeString }));
-          }
+          // ใช้ค่าสัมบูรณ์เพื่อป้องกันค่าติดลบ
+          const absoluteElapsed = Math.abs(elapsed);
+          const hours = Math.floor(absoluteElapsed / 3600);
+          const minutes = Math.floor((absoluteElapsed % 3600) / 60);
+          const seconds = Math.floor(absoluteElapsed % 60);
+          const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          setGroutingTimer(timeString); // อัพเดท timer state
+          setFormData(prev => ({ ...prev, timeGrouting: timeString }));
         }
         
         // คำนวณข้อมูลกราฟจากข้อมูลฟอร์มจริง
@@ -535,7 +583,7 @@ const SoilCementReport = () => {
                           step="1"
                         />
                         <Button 
-                          onClick={startDrillingTimerWithCustomTime}
+                          onClick={setDrillingCustomTime}
                           className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           Set
@@ -597,7 +645,7 @@ const SoilCementReport = () => {
                           step="1"
                         />
                         <Button 
-                          onClick={startGroutingTimerWithCustomTime}
+                          onClick={setGroutingCustomTime}
                           className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white"
                         >
                           Set
