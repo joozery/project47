@@ -6,10 +6,14 @@ import { Printer, Download, Edit2, Save, X } from 'lucide-react';
 
 const SoilCementReport = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [drillingTimer, setDrillingTimer] = useState(null);
-  const [groutingTimer, setGroutingTimer] = useState(null);
+  const [drillingTimer, setDrillingTimer] = useState('00:00:00');
+  const [groutingTimer, setGroutingTimer] = useState('00:00:00');
   const [drillingStartTime, setDrillingStartTime] = useState(null);
   const [groutingStartTime, setGroutingStartTime] = useState(null);
+  const [showDrillingTimeInput, setShowDrillingTimeInput] = useState(false);
+  const [showGroutingTimeInput, setShowGroutingTimeInput] = useState(false);
+  const [customDrillingTime, setCustomDrillingTime] = useState('');
+  const [customGroutingTime, setCustomGroutingTime] = useState('');
   
   // State for real-time graph data
   const [graphData, setGraphData] = useState({
@@ -146,50 +150,26 @@ const SoilCementReport = () => {
     const timeString = now.toTimeString().split(' ')[0];
     setFormData(prev => ({ ...prev, startDrilling: timeString }));
     setDrillingStartTime(now);
-    
-    const timer = setInterval(() => {
-      const elapsed = new Date() - now;
-      const hours = Math.floor(elapsed / 3600000);
-      const minutes = Math.floor((elapsed % 3600000) / 60000);
-      const seconds = Math.floor((elapsed % 60000) / 1000);
-      const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      setFormData(prev => ({ ...prev, timeDrilling: timeString }));
+    setDrillingTimer('00:00:00'); // รีเซ็ต timer เป็น 00:00:00
+    setShowDrillingTimeInput(false); // ซ่อน input
+  };
+
+  const startDrillingTimerWithCustomTime = () => {
+    if (customDrillingTime) {
+      // แปลงเวลาที่คีย์เป็น Date object
+      const [hours, minutes, seconds] = customDrillingTime.split(':').map(Number);
+      const now = new Date();
+      const customTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
       
-      // Update graph data in real-time for drilling
-      setGraphData(prev => ({
-        ...prev,
-        pressure: prev.pressure.map((point, i) => ({
-          ...point,
-          y: 100 + Math.random() * 50 + Math.sin(elapsed / 1000 + i) * 10
-        })),
-        rotation: prev.rotation.map((point, i) => ({
-          ...point,
-          y: 50 + Math.random() * 20 + Math.cos(elapsed / 1000 + i) * 5
-        })),
-        speed: prev.speed.map((point, i) => ({
-          ...point,
-          y: Math.min(10, i * 0.4 + Math.random() * 0.5 + Math.sin(elapsed / 1000 + i) * 0.3)
-        })),
-        flow: prev.flow.map((point, i) => ({
-          ...point,
-          y: 100 + Math.random() * 30 + Math.sin(elapsed / 1000 + i) * 15
-        })),
-        waterVolume: prev.waterVolume.map((point, i) => ({
-          ...point,
-          y: Math.min(2000, i * 80 + Math.random() * 50 + Math.sin(elapsed / 1000 + i) * 40)
-        }))
-      }));
-    }, 1000);
-    
-    setDrillingTimer(timer);
+      setFormData(prev => ({ ...prev, startDrilling: customDrillingTime }));
+      setDrillingStartTime(customTime);
+      setDrillingTimer('00:00:00');
+      setShowDrillingTimeInput(false);
+      setCustomDrillingTime('');
+    }
   };
 
   const stopDrillingTimer = () => {
-    if (drillingTimer) {
-      clearInterval(drillingTimer);
-      setDrillingTimer(null);
-    }
-    
     const now = new Date();
     const endTimeString = now.toTimeString().split(' ')[0];
     setFormData(prev => ({ ...prev, endDrilling: endTimeString }));
@@ -202,6 +182,7 @@ const SoilCementReport = () => {
       const elapsedTimeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
       setFormData(prev => ({ ...prev, timeDrilling: elapsedTimeString }));
       setDrillingStartTime(null);
+      setDrillingTimer(elapsedTimeString); // เก็บค่า timer สุดท้าย
     }
   };
 
@@ -211,54 +192,26 @@ const SoilCementReport = () => {
     const timeString = now.toTimeString().split(' ')[0];
     setFormData(prev => ({ ...prev, startGrouting: timeString }));
     setGroutingStartTime(now);
-    
-    const timer = setInterval(() => {
-      const elapsed = new Date() - now;
-      const hours = Math.floor(elapsed / 3600000);
-      const minutes = Math.floor((elapsed % 3600000) / 60000);
-      const seconds = Math.floor((elapsed % 60000) / 1000);
-      const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      setFormData(prev => ({ ...prev, timeGrouting: timeString }));
+    setGroutingTimer('00:00:00'); // รีเซ็ต timer เป็น 00:00:00
+    setShowGroutingTimeInput(false); // ซ่อน input
+  };
+
+  const startGroutingTimerWithCustomTime = () => {
+    if (customGroutingTime) {
+      // แปลงเวลาที่คีย์เป็น Date object
+      const [hours, minutes, seconds] = customGroutingTime.split(':').map(Number);
+      const now = new Date();
+      const customTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
       
-      // Update graph data in real-time for grouting
-      setGraphData(prev => ({
-        ...prev,
-        pressure: prev.pressure.map((point, i) => ({
-          ...point,
-          y: 100 + Math.random() * 50 + Math.cos(elapsed / 1000 + i) * 10
-        })),
-        rotation: prev.rotation.map((point, i) => ({
-          ...point,
-          y: 50 + Math.random() * 20 + Math.cos(elapsed / 1000 + i) * 5
-        })),
-        speed: prev.speed.map((point, i) => ({
-          ...point,
-          y: Math.min(2, 1 + Math.random() * 0.5 + Math.cos(elapsed / 1000 + i) * 0.2)
-        })),
-        flow: prev.flow.map((point, i) => ({
-          ...point,
-          y: 100 + Math.random() * 30 + Math.cos(elapsed / 1000 + i) * 15
-        })),
-        waterVolume: prev.waterVolume.map((point, i) => ({
-          ...point,
-          y: Math.min(2000, i * 80 + Math.random() * 50 + Math.cos(elapsed / 1000 + i) * 40)
-        })),
-        cementVolume: prev.cementVolume.map((point, i) => ({
-          ...point,
-          y: Math.min(2000, i * 80 + Math.random() * 50 + Math.cos(elapsed / 1000 + i) * 40)
-        }))
-      }));
-    }, 1000);
-    
-    setGroutingTimer(timer);
+      setFormData(prev => ({ ...prev, startGrouting: customGroutingTime }));
+      setGroutingStartTime(customTime);
+      setGroutingTimer('00:00:00');
+      setShowGroutingTimeInput(false);
+      setCustomGroutingTime('');
+    }
   };
 
   const stopGroutingTimer = () => {
-    if (groutingTimer) {
-      clearInterval(groutingTimer);
-      setGroutingTimer(null);
-    }
-    
     const now = new Date();
     const endTimeString = now.toTimeString().split(' ')[0];
     setFormData(prev => ({ ...prev, endGrouting: endTimeString }));
@@ -271,29 +224,55 @@ const SoilCementReport = () => {
       const elapsedTimeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
       setFormData(prev => ({ ...prev, timeGrouting: elapsedTimeString }));
       setGroutingStartTime(null);
+      setGroutingTimer(elapsedTimeString); // เก็บค่า timer สุดท้าย
     }
   };
 
   // Cleanup timers on component unmount
   React.useEffect(() => {
     return () => {
-      if (drillingTimer) clearInterval(drillingTimer);
-      if (groutingTimer) clearInterval(groutingTimer);
+      // ไม่ต้อง clearInterval เพราะเราไม่ได้เก็บ timer ID แล้ว
     };
-  }, [drillingTimer, groutingTimer]);
+  }, []);
 
-  // Continuous graph updates when timers are running
+  // Continuous timer updates and graph updates when timers are running
   useEffect(() => {
     let interval;
     if (drillingStartTime || groutingStartTime) {
       interval = setInterval(() => {
         const now = Date.now();
-        const elapsed = (now - (drillingStartTime || groutingStartTime)) / 1000;
+        
+        // อัพเดท Drilling Timer
+        if (drillingStartTime) {
+          const elapsed = (now - drillingStartTime) / 1000;
+          if (elapsed >= 0) { // ตรวจสอบว่าเวลาย้อนหลังหรือไม่
+            const hours = Math.floor(elapsed / 3600);
+            const minutes = Math.floor((elapsed % 3600) / 60);
+            const seconds = Math.floor(elapsed % 60);
+            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            setDrillingTimer(timeString); // อัพเดท timer state
+            setFormData(prev => ({ ...prev, timeDrilling: timeString }));
+          }
+        }
+        
+        // อัพเดท Grouting Timer
+        if (groutingStartTime) {
+          const elapsed = (now - groutingStartTime) / 1000;
+          if (elapsed >= 0) { // ตรวจสอบว่าเวลาย้อนหลังหรือไม่
+            const hours = Math.floor(elapsed / 3600);
+            const minutes = Math.floor((elapsed % 3600) / 60);
+            const seconds = Math.floor(elapsed % 60);
+            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            setGroutingTimer(timeString); // อัพเดท timer state
+            setFormData(prev => ({ ...prev, timeGrouting: timeString }));
+          }
+        }
         
         // คำนวณข้อมูลกราฟจากข้อมูลฟอร์มจริง
         const depth = parseFloat(formData.tip) || 10.0;
         const cementRatio = parseFloat(formData.cementRatio) || 250.0;
         const groutVolume = parseFloat(formData.groutVolume) || 1004.0;
+        const diameter = parseFloat(formData.diameter) || 0.6;
         
         setGraphData(prev => ({
           ...prev,
@@ -511,24 +490,61 @@ const SoilCementReport = () => {
                   Start Drilling
                 </td>
                 <td className="border border-gray-300">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-gray-800">{formData.startDrilling}</span>
-                    {!drillingTimer ? (
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-800">{formData.startDrilling}</span>
+                      {!drillingStartTime ? (
+                        <Button
+                          onClick={startDrillingTimer}
+                          className="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white print:hidden"
+                          disabled={isEditing}
+                        >
+                          Start
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={stopDrillingTimer}
+                          className="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white print:hidden"
+                          disabled={isEditing}
+                        >
+                          Stop
+                        </Button>
+                      )}
                       <Button
-                        onClick={startDrillingTimer}
-                        className="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white print:hidden"
+                        onClick={() => setShowDrillingTimeInput(!showDrillingTimeInput)}
+                        className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white print:hidden"
                         disabled={isEditing}
                       >
-                        Start
+                        Custom
                       </Button>
-                    ) : (
-                      <Button
-                        onClick={stopDrillingTimer}
-                        className="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white print:hidden"
-                        disabled={isEditing}
-                      >
-                        Stop
-                      </Button>
+                    </div>
+                    
+                    {showDrillingTimeInput && (
+                      <div className="flex items-center space-x-2 print:hidden">
+                        <Input
+                          type="time"
+                          value={customDrillingTime}
+                          onChange={(e) => setCustomDrillingTime(e.target.value)}
+                          className="w-24 h-8 text-xs"
+                          step="1"
+                        />
+                        <Button 
+                          onClick={startDrillingTimerWithCustomTime}
+                          className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Set
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            setShowDrillingTimeInput(false);
+                            setCustomDrillingTime('');
+                          }}
+                          variant="outline"
+                          className="px-2 py-1 text-xs"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </td>
@@ -536,25 +552,62 @@ const SoilCementReport = () => {
                   Start Grouting
                 </td>
                 <td className="border border-gray-300">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-gray-800">{formData.startGrouting}</span>
-                    {!groutingTimer ? (
-                      <Button
-                        onClick={startGroutingTimer}
-                        className="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white print:hidden"
-                        disabled={isEditing}
-                      >
-                        Start
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={stopGroutingTimer}
-                        className="px-2 py-1 text-xs bg-green-600 hover:bg-red-700 text-white print:hidden"
-                        disabled={isEditing}
-                      >
-                        Stop
-                      </Button>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-800">{formData.startGrouting}</span>
+                      {!groutingStartTime ? (
+                        <Button
+                          onClick={startGroutingTimer}
+                          className="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 text-white print:hidden"
+                          disabled={isEditing}
+                        >
+                          Start
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={stopGroutingTimer}
+                          className="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white print:hidden"
+                          disabled={isEditing}
+                        >
+                          Stop
+                        </Button>
                       )}
+                      <Button
+                        onClick={() => setShowGroutingTimeInput(!showGroutingTimeInput)}
+                        className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white print:hidden"
+                        disabled={isEditing}
+                      >
+                        Custom
+                      </Button>
+                    </div>
+                    
+                    {showGroutingTimeInput && (
+                      <div className="flex items-center space-x-2 print:hidden">
+                        <Input
+                          type="time"
+                          value={customGroutingTime}
+                          onChange={(e) => setCustomGroutingTime(e.target.value)}
+                          className="w-24 h-8 text-xs"
+                          step="1"
+                        />
+                        <Button 
+                          onClick={startGroutingTimerWithCustomTime}
+                          className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Set
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            setShowGroutingTimeInput(false);
+                            setCustomGroutingTime('');
+                          }}
+                          variant="outline"
+                          className="px-2 py-1 text-xs"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </td>
                 <td className="border border-gray-300 font-semibold text-gray-700">
