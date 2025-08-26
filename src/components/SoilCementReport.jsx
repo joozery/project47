@@ -17,11 +17,13 @@ const SoilCementReport = () => {
   
   // State for real-time graph data
   const [graphData, setGraphData] = useState({
-    pressure: Array(11).fill(0).map((_, i) => ({ x: i * 1.0, y: 100 + Math.random() * 50 })),
+    pressureDown: Array(11).fill(0).map((_, i) => ({ x: i * 1.0, y: 0 })),
+    pressureUp: Array(11).fill(0).map((_, i) => ({ x: i * 1.0, y: 100 + Math.random() * 50 })),
     rotation: Array(11).fill(0).map((_, i) => ({ x: i * 1.0, y: 50 + Math.random() * 20 })),
     speed: Array(11).fill(0).map((_, i) => ({ x: i * 1.0, y: i * 0.4 + Math.random() * 0.5 })),
-    flow: Array(11).fill(0).map((_, i) => ({ x: i * 1.0, y: 100 + Math.random() * 30 })),
-    waterVolume: Array(11).fill(0).map((_, i) => ({ x: i * 1.0, y: i * 80 + Math.random() * 50 })),
+    flowDown: Array(11).fill(0).map((_, i) => ({ x: i * 1.0, y: 0 })),
+    flowUp: Array(11).fill(0).map((_, i) => ({ x: i * 1.0, y: 100 + Math.random() * 30 })),
+    waterVolume: Array(11).fill(0).map((_, i) => ({ x: i * 1.0, y: 0 })),
     cementVolume: Array(11).fill(0).map((_, i) => ({ x: i * 1.0, y: i * 80 + Math.random() * 50 }))
   });
   
@@ -75,7 +77,7 @@ const SoilCementReport = () => {
           }));
           newData.waterVolume = prev.waterVolume.map((point, i) => ({
             ...point,
-            y: Math.min(2000, (numValue * 80) + (i * 20) + Math.random() * 30)
+            y: 0
           }));
           newData.cementVolume = prev.cementVolume.map((point, i) => ({
             ...point,
@@ -84,16 +86,24 @@ const SoilCementReport = () => {
           break;
           
         case 'cementRatio':
-          // อัพเดทกราฟ Pressure ตามอัตราส่วนซีเมนต์
-          newData.pressure = prev.pressure.map((point, i) => ({
+          // อัพเดทกราฟ Pressure: lock down to 0, keep up dynamic
+          newData.pressureDown = prev.pressureDown.map((point, i) => ({
+            ...point,
+            y: 0
+          }));
+          newData.pressureUp = prev.pressureUp.map((point, i) => ({
             ...point,
             y: 100 + (numValue / 10) + Math.sin(i * 0.5) * 10 + Math.random() * 20
           }));
           break;
           
         case 'groutVolume':
-          // อัพเดทกราฟ Flow ตามปริมาณซีเมนต์
-          newData.flow = prev.flow.map((point, i) => ({
+          // อัพเดทกราฟ Flow: lock down to 0, keep up dynamic
+          newData.flowDown = prev.flowDown.map((point, i) => ({
+            ...point,
+            y: 0
+          }));
+          newData.flowUp = prev.flowUp.map((point, i) => ({
             ...point,
             y: 100 + (numValue / 20) + Math.sin(i * 0.5) * 15 + Math.random() * 10
           }));
@@ -330,7 +340,11 @@ const SoilCementReport = () => {
         
         setGraphData(prev => ({
           ...prev,
-          pressure: prev.pressure.map((point, i) => ({
+          pressureDown: prev.pressureDown.map((point, i) => ({
+            ...point,
+            y: 0
+          })),
+          pressureUp: prev.pressureUp.map((point, i) => ({
             ...point,
             y: 100 + (cementRatio / 10) + Math.sin(graphElapsed + i) * 10 + Math.random() * 20
           })),
@@ -342,17 +356,17 @@ const SoilCementReport = () => {
             ...point,
             y: Math.min(10, (depth / 10) + Math.sin(graphElapsed + i) * 0.3 + Math.random() * 0.2)
           })),
-          flow: prev.flow.map((point, i) => ({
+          flowDown: prev.flowDown.map((point, i) => ({
+            ...point,
+            y: 0
+          })),
+          flowUp: prev.flowUp.map((point, i) => ({
             ...point,
             y: 100 + (groutVolume / 20) + Math.sin(graphElapsed + i) * 15 + Math.random() * 10
           })),
           waterVolume: prev.waterVolume.map((point, i) => ({
             ...point,
-            y: Math.min(2000, (depth * 80) + Math.sin(graphElapsed + i) * 40 + Math.random() * 30)
-          })),
-          cementVolume: prev.cementVolume.map((point, i) => ({
-            ...point,
-            y: Math.min(2000, (depth * 80) + Math.cos(graphElapsed + i) * 40 + Math.random() * 30)
+            y: 0
           }))
         }));
       }, 1000);
@@ -896,11 +910,9 @@ const SoilCementReport = () => {
                   </div>
                   {/* X-axis labels */}
                   <div className="absolute bottom-0 left-8 right-0 flex justify-between text-xs text-gray-600 print:text-xs">
-                    <span>0.0</span>
-                    <span>2.5</span>
-                    <span>5.0</span>
-                    <span>7.5</span>
-                    <span>10.0</span>
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
                   </div>
                   {/* Area Chart */}
                   <svg className="w-full h-full print:w-full print:h-full" viewBox="0 0 400 160">
@@ -911,7 +923,7 @@ const SoilCementReport = () => {
                       </linearGradient>
                     </defs>
                     <path
-                      d={`M 0 160 ${graphData.pressure.map((point, i) => 
+                      d={`M 0 160 ${graphData.pressureDown.map((point, i) => 
                         `L ${point.x * 40} ${160 - (point.y / 400) * 160}`
                       ).join(' ')} L 400 160 Z`}
                       fill="url(#pressureGradient1)"
@@ -950,7 +962,7 @@ const SoilCementReport = () => {
                       </linearGradient>
                     </defs>
                     <path
-                      d={`M 0 160 ${graphData.pressure.map((point, i) => 
+                      d={`M 0 160 ${graphData.pressureUp.map((point, i) => 
                         `L ${point.x * 40} ${160 - (point.y / 400) * 160}`
                       ).join(' ')} L 400 160 Z`}
                       fill="url(#pressureGradient2)"
@@ -977,11 +989,9 @@ const SoilCementReport = () => {
                   </div>
                   {/* X-axis labels */}
                   <div className="absolute bottom-0 left-8 right-0 flex justify-between text-xs text-gray-600 print:text-xs">
-                    <span>0.0</span>
-                    <span>2.5</span>
-                    <span>5.0</span>
-                    <span>7.5</span>
-                    <span>10.0</span>
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
                   </div>
                   {/* Area Chart */}
                   <svg className="w-full h-full print:w-full print:h-full" viewBox="0 0 400 160">
@@ -1052,9 +1062,9 @@ const SoilCementReport = () => {
                 <div className="h-40 relative print:h-20">
                   {/* Y-axis labels */}
                   <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-600 print:text-xs">
-                    <span>10</span>
-                    <span>5</span>
-                    <span>0</span>
+                    <span>3</span>
+                    <span>2</span>
+                    <span>1</span>
                   </div>
                   {/* X-axis labels */}
                   <div className="absolute bottom-0 left-8 right-0 flex justify-between text-xs text-gray-600 print:text-xs">
@@ -1154,7 +1164,7 @@ const SoilCementReport = () => {
                       </linearGradient>
                     </defs>
                     <path
-                      d={`M 0 160 ${graphData.flow.map((point, i) => 
+                      d={`M 0 160 ${graphData.flowDown.map((point, i) => 
                         `L ${point.x * 40} ${160 - (point.y / 200) * 160}`
                       ).join(' ')} L 400 160 Z`}
                       fill="url(#flowGradient1)"
@@ -1193,7 +1203,7 @@ const SoilCementReport = () => {
                       </linearGradient>
                     </defs>
                     <path
-                      d={`M 0 160 ${graphData.flow.map((point, i) => 
+                      d={`M 0 160 ${graphData.flowUp.map((point, i) => 
                         `L ${point.x * 40} ${160 - (point.y / 400) * 160}`
                       ).join(' ')} L 400 160 Z`}
                       fill="url(#flowGradient2)"
